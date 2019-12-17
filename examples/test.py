@@ -60,7 +60,7 @@ for n in range(32):
     # duty = 128
     # duty = 128 if n == 0 else 8
     if n == n0:
-        duty = 192
+        duty = 128
     elif n == (n0+1):
         duty = 64
     else:

@@ -1,20 +1,4 @@
-// module top (
-//     input CLK,
-//     input PIN_1,
-//     input PIN_2,
-//     input PIN_3,
-//     output LED
-// );
-//
-// blink inst_1 (
-//     .i_clock(CLK),
-//     .i_enable(PIN_1),
-//     .i_switch_1(PIN_2),
-//     .i_switch_2(PIN_3),
-//     .o_led_drive(LED)
-//  );
-//
-// endmodule
+`define HALF_OUTPUT_FREQ 1
 
 module top (
         input CLK,
@@ -52,18 +36,41 @@ module top (
 
     wire CLK_48;
 
-    phase phase_generator (
-        .i_clk(CLK_48),
-        .o_channel({PIN_16, PIN_15, PIN_14, PIN_13, PIN_12, PIN_11, PIN_10, PIN_9, PIN_8, PIN_7, PIN_6, PIN_5, PIN_4, PIN_3, PIN_2, PIN_1}),
-        .o_data_clk(PIN_18), // STCP
-        .o_latch(PIN_17), // SHCP
-        .o_sync(PIN_19),
-        .i_command(cmd),
-        .i_command_data(cmd_data),
-        .i_overflow(overflow),
-        .o_reply(reply),
-        .o_reply_data(reply_data)
-    );
+    `ifdef HALF_OUTPUT_FREQ
+        reg CLK_24 = 0;
+
+        always @ (posedge CLK_48) begin
+            CLK_24 <= ~CLK_24;
+        end
+
+        phase #(.PERIOD_CYCLES(600), .PHASE_CYCLES(32)) phase_generator (
+            .i_data_clk(CLK_24),
+            .o_channel({PIN_16, PIN_15, PIN_14, PIN_13, PIN_12, PIN_11, PIN_10, PIN_9, PIN_8, PIN_7, PIN_6, PIN_5, PIN_4, PIN_3, PIN_2, PIN_1}),
+            .o_data_clk(PIN_18),
+            .o_latch(PIN_17),
+            .o_sync(PIN_19),
+            .i_command_clk(CLK_48),
+            .i_command(cmd),
+            .i_command_data(cmd_data),
+            .i_overflow(overflow),
+            .o_reply(reply),
+            .o_reply_data(reply_data)
+        );
+    `else
+        phase #(.PERIOD_CYCLES(1200), .PHASE_CYCLES(64)) phase_generator (
+            .i_data_clk(CLK_48),
+            .o_channel({PIN_16, PIN_15, PIN_14, PIN_13, PIN_12, PIN_11, PIN_10, PIN_9, PIN_8, PIN_7, PIN_6, PIN_5, PIN_4, PIN_3, PIN_2, PIN_1}),
+            .o_data_clk(PIN_18),
+            .o_latch(PIN_17),
+            .o_sync(PIN_19),
+            .i_command_clk(CLK_48),
+            .i_command(cmd),
+            .i_command_data(cmd_data),
+            .i_overflow(overflow),
+            .o_reply(reply),
+            .o_reply_data(reply_data)
+        );
+    `endif
 
     usb_command #(.ID_VENDOR('h1209), .ID_PRODUCT('h6130)) command_decoder (
         .CLK(CLK),

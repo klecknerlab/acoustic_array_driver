@@ -4,17 +4,17 @@ import struct
 
 
 class Controller(object):
-    def __init__(self, dev_id='1209:6130', bootloader_ids = ['1d50:6130', '1209:2100']):
+    def __init__(self, dev_id='1209:6130', bootloader_ids = ('1d50:6130', '1209:2100')):
         ports = get_ports(dev_id)
 
         if not ports:
             reset_some = False
 
-            for id in bootloader_ids:
-                ports_bl = get_ports(id)
+            for bid in bootloader_ids:
+                ports_bl = get_ports(bid)
 
                 if ports_bl:
-                    print("Found a TinyFPGA in bootloader mode at %s... trying to reset." % id)
+                    print("Found a TinyFPGA in bootloader mode at %s... trying to reset." % dev_id)
                     for p in ports_bl:
                         p.write('\x00')
                         reset_some = True
@@ -28,20 +28,29 @@ class Controller(object):
                 else:
                     print('That worked!')
             else:
-                raise RuntimeError('No devices found with address %s, or TinyFPGAs in bootloader mode.' % id)
+                raise RuntimeError('No devices found with address %s, or TinyFPGAs in bootloader mode.' % dev_id)
 
         self.port = ports[0]
 
-    def cmd(self, cmd, val1=0, val2=0):
+    def cmd(self, cmd, val1=0, val2=0, val3=0):
         if type(cmd) is str: cmd = bytes(cmd, encoding='utf-8')
-        self.port.write(struct.pack(">cBB", cmd, val1, val2))
+        self.port.write(struct.pack(">cBBB", cmd, val1, val2, val3))
 
         # Capital letter commands return 3 bytes (always)
         if not (ord(cmd) & 32):
-            return struct.unpack(">BBB", self.port.read(3))
+            return struct.unpack(">BBBB", self.port.read(4))
         else:
             return None
 
+    def write_channel(self, channel, duty, phase, check=True):
+        retvals = self.cmd(b"W" if check else "w", 0, duty, phase)
+        if check and retvals[0] != 0:
+                raise ValueError('Write channel returned error code %d' % retvals[0])
+
+    def select_bank(self, read=255, write=255, check=True):
+        retvals = self.cmd(b"B" if check else "b", 0, read, write)
+        if check and retvals[0] != 0:
+                raise ValueError('Write channel returned error code %d' % retvals[0])
 
 # -----------------------------------------------------------------------------
 # The following functions are copied from TinyProg

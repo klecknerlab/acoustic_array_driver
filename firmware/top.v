@@ -27,11 +27,11 @@ module top (
         // output PIN_20
     );
 
-    wire [23:0] cmd_data;
+    wire [31:0] cmd_data;
     wire cmd;
     wire overflow;
 
-    wire [23:0] reply_data;
+    wire [31:0] reply_data;
     wire reply;
 
     wire CLK_48;

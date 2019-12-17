@@ -1,8 +1,8 @@
 module usb_command #(
         parameter ID_VENDOR = 'h1d50,
         parameter ID_PRODUCT = 'h6130,
-        parameter COMMAND_BYTES = 3,
-        parameter REPLY_BYTES = 3,
+        parameter COMMAND_BYTES = 4,
+        parameter REPLY_BYTES = 4,
         parameter UART_RESET_CYCLES = 480000
     )  (
         input  CLK,

@@ -55,8 +55,8 @@ module top (
     phase phase_generator (
         .i_clk(CLK_48),
         .o_channel({PIN_16, PIN_15, PIN_14, PIN_13, PIN_12, PIN_11, PIN_10, PIN_9, PIN_8, PIN_7, PIN_6, PIN_5, PIN_4, PIN_3, PIN_2, PIN_1}),
-        .o_data_clk(PIN_17),
-        .o_latch(PIN_18),
+        .o_data_clk(PIN_18), // STCP
+        .o_latch(PIN_17), // SHCP
         .o_sync(PIN_19),
         .i_command(cmd),
         .i_command_data(cmd_data),

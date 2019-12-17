@@ -257,7 +257,7 @@ module phase #(parameter PERIOD_CYCLES=600, PHASE_CYCLES=32, INIT_CYCLES=520) (
                 write_addr <= i_startup[7:0];
                 channel_write <= 16'hFFFF;
                 // write_data <= {2'b00, i_startup[3:0], 2'b00, 8'h20};
-                write_data <= {i_startup[3:0], 12'h0F0};
+                write_data <= {i_startup[3:0], 12'h080};
             end else begin
                 channel_write <= 16'h0000;
                 write_bank <= 0;

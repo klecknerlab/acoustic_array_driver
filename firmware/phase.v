@@ -124,9 +124,13 @@ module phase #(parameter PERIOD_CYCLES=600, PHASE_CYCLES=32, INIT_CYCLES=520) (
 
     reg [3:0] next_physical_channel = 0;
 
-    reg [7:0] channel_read_odd;
-    reg [7:0] channel_read_even;
-    reg [3:0] current_read_bank = 0;
+
+
+    reg [3:0] channel_read_odd;
+    reg [3:0] channel_read_even;
+
+
+    // reg [3:0] current_read_bank = 0;
 
     // This doesn't work!   Verilog can not synthesize ):
     // always @ (current_read_bank, next_physical_channel) begin
@@ -136,9 +140,12 @@ module phase #(parameter PERIOD_CYCLES=600, PHASE_CYCLES=32, INIT_CYCLES=520) (
 
     // Is there a better way than a long case?  I don't know!
     // This is a 16-way multiplexer, essentially.
-    always @ (current_read_bank, next_physical_channel) begin
+    always @ (next_physical_channel) begin
+        // channel_read_odd <= next_physical_channel;
+        // channel_read_even <= next_physical_channel;
         `SELECT4x16(next_physical_channel, channel_read_odd, channel_swap_odd)
         `SELECT4x16(next_physical_channel, channel_read_even, channel_swap_even)
+    end
         // case (next_physical_channel)
         //     0: begin
         //         channel_read_odd  <= {current_read_bank,  channel_swap_odd[3:0]};
@@ -205,119 +212,119 @@ module phase #(parameter PERIOD_CYCLES=600, PHASE_CYCLES=32, INIT_CYCLES=520) (
         //         channel_read_even <= {current_read_bank, channel_swap_even[63:60]};
         //     end
         // endcase
-    end
+
 
     // Duty cycle, and phase for each output
     wire [7:0] phase_0;
     wire [7:0] duty_0;
     ram #(.addr_width(8), .data_width(16)) data_0 (
         .din(write_data), .write_en(channel_write[0]), .waddr(write_addr), .wclk(i_command_clk),
-        .raddr(channel_read_odd), .rclk(i_data_clk), .dout({phase_0, duty_0})
+        .raddr({read_bank, channel_read_odd}), .rclk(i_data_clk), .dout({phase_0, duty_0})
     );
 
     wire [7:0] phase_1;
     wire [7:0] duty_1;
     ram #(.addr_width(8), .data_width(16)) data_1 (
         .din(write_data), .write_en(channel_write[1]), .waddr(write_addr), .wclk(i_command_clk),
-        .raddr(channel_read_even), .rclk(i_data_clk), .dout({phase_1, duty_1})
+        .raddr({read_bank, channel_read_even}), .rclk(i_data_clk), .dout({phase_1, duty_1})
     );
 
     wire [7:0] phase_2;
     wire [7:0] duty_2;
     ram #(.addr_width(8), .data_width(16)) data_2 (
         .din(write_data), .write_en(channel_write[2]), .waddr(write_addr), .wclk(i_command_clk),
-        .raddr(channel_read_odd), .rclk(i_data_clk), .dout({phase_2, duty_2})
+        .raddr({read_bank, channel_read_odd}), .rclk(i_data_clk), .dout({phase_2, duty_2})
     );
 
     wire [7:0] phase_3;
     wire [7:0] duty_3;
     ram #(.addr_width(8), .data_width(16)) data_3 (
         .din(write_data), .write_en(channel_write[3]), .waddr(write_addr), .wclk(i_command_clk),
-        .raddr(channel_read_even), .rclk(i_data_clk), .dout({phase_3, duty_3})
+        .raddr({read_bank, channel_read_even}), .rclk(i_data_clk), .dout({phase_3, duty_3})
     );
 
     wire [7:0] phase_4;
     wire [7:0] duty_4;
     ram #(.addr_width(8), .data_width(16)) data_4 (
         .din(write_data), .write_en(channel_write[4]), .waddr(write_addr), .wclk(i_command_clk),
-        .raddr(channel_read_odd), .rclk(i_data_clk), .dout({phase_4, duty_4})
+        .raddr({read_bank, channel_read_odd}), .rclk(i_data_clk), .dout({phase_4, duty_4})
     );
 
     wire [7:0] phase_5;
     wire [7:0] duty_5;
     ram #(.addr_width(8), .data_width(16)) data_5 (
         .din(write_data), .write_en(channel_write[5]), .waddr(write_addr), .wclk(i_command_clk),
-        .raddr(channel_read_even), .rclk(i_data_clk), .dout({phase_5, duty_5})
+        .raddr({read_bank, channel_read_even}), .rclk(i_data_clk), .dout({phase_5, duty_5})
     );
 
     wire [7:0] phase_6;
     wire [7:0] duty_6;
     ram #(.addr_width(8), .data_width(16)) data_6 (
         .din(write_data), .write_en(channel_write[6]), .waddr(write_addr), .wclk(i_command_clk),
-        .raddr(channel_read_odd), .rclk(i_data_clk), .dout({phase_6, duty_6})
+        .raddr({read_bank, channel_read_odd}), .rclk(i_data_clk), .dout({phase_6, duty_6})
     );
 
     wire [7:0] phase_7;
     wire [7:0] duty_7;
     ram #(.addr_width(8), .data_width(16)) data_7 (
         .din(write_data), .write_en(channel_write[7]), .waddr(write_addr), .wclk(i_command_clk),
-        .raddr(channel_read_even), .rclk(i_data_clk), .dout({phase_7, duty_7})
+        .raddr({read_bank, channel_read_even}), .rclk(i_data_clk), .dout({phase_7, duty_7})
     );
 
     wire [7:0] phase_8;
     wire [7:0] duty_8;
     ram #(.addr_width(8), .data_width(16)) data_8 (
         .din(write_data), .write_en(channel_write[8]), .waddr(write_addr), .wclk(i_command_clk),
-        .raddr(channel_read_odd), .rclk(i_data_clk), .dout({phase_8, duty_8})
+        .raddr({read_bank, channel_read_odd}), .rclk(i_data_clk), .dout({phase_8, duty_8})
     );
 
     wire [7:0] phase_9;
     wire [7:0] duty_9;
     ram #(.addr_width(8), .data_width(16)) data_9 (
         .din(write_data), .write_en(channel_write[9]), .waddr(write_addr), .wclk(i_command_clk),
-        .raddr(read_addr), .rclk(i_data_clk), .dout({phase_9, duty_9})
+        .raddr({read_bank, channel_read_even}), .rclk(i_data_clk), .dout({phase_9, duty_9})
     );
 
     wire [7:0] phase_10;
     wire [7:0] duty_10;
     ram #(.addr_width(8), .data_width(16)) data_10 (
         .din(write_data), .write_en(channel_write[10]), .waddr(write_addr), .wclk(i_command_clk),
-        .raddr(channel_read_odd), .rclk(i_data_clk), .dout({phase_10, duty_10})
+        .raddr({read_bank, channel_read_odd}), .rclk(i_data_clk), .dout({phase_10, duty_10})
     );
 
     wire [7:0] phase_11;
     wire [7:0] duty_11;
     ram #(.addr_width(8), .data_width(16)) data_11 (
         .din(write_data), .write_en(channel_write[11]), .waddr(write_addr), .wclk(i_command_clk),
-        .raddr(channel_read_even), .rclk(i_data_clk), .dout({phase_11, duty_11})
+        .raddr({read_bank, channel_read_even}), .rclk(i_data_clk), .dout({phase_11, duty_11})
     );
 
     wire [7:0] phase_12;
     wire [7:0] duty_12;
     ram #(.addr_width(8), .data_width(16)) data_12 (
         .din(write_data), .write_en(channel_write[12]), .waddr(write_addr), .wclk(i_command_clk),
-        .raddr(channel_read_odd), .rclk(i_data_clk), .dout({phase_12, duty_12})
+        .raddr({read_bank, channel_read_odd}), .rclk(i_data_clk), .dout({phase_12, duty_12})
     );
 
     wire [7:0] phase_13;
     wire [7:0] duty_13;
     ram #(.addr_width(8), .data_width(16)) data_13 (
         .din(write_data), .write_en(channel_write[13]), .waddr(write_addr), .wclk(i_command_clk),
-        .raddr(channel_read_even), .rclk(i_data_clk), .dout({phase_13, duty_13})
+        .raddr({read_bank, channel_read_even}), .rclk(i_data_clk), .dout({phase_13, duty_13})
     );
 
     wire [7:0] phase_14;
     wire [7:0] duty_14;
     ram #(.addr_width(8), .data_width(16)) data_14 (
         .din(write_data), .write_en(channel_write[14]), .waddr(write_addr), .wclk(i_command_clk),
-        .raddr(channel_read_odd), .rclk(i_data_clk), .dout({phase_14, duty_14})
+        .raddr({read_bank, channel_read_odd}), .rclk(i_data_clk), .dout({phase_14, duty_14})
     );
 
     wire [7:0] phase_15;
     wire [7:0] duty_15;
     ram #(.addr_width(8), .data_width(16)) data_15 (
         .din(write_data), .write_en(channel_write[15]), .waddr(write_addr), .wclk(i_command_clk),
-        .raddr(channel_read_even), .rclk(i_data_clk), .dout({phase_15, duty_15})
+        .raddr({read_bank, channel_read_even}), .rclk(i_data_clk), .dout({phase_15, duty_15})
     );
 
     always @ (posedge i_data_clk) begin
@@ -436,6 +443,7 @@ module phase #(parameter PERIOD_CYCLES=600, PHASE_CYCLES=32, INIT_CYCLES=520) (
                             `SELECT4x16(i_command_data[19:16], o_reply_data[3:0], channel_swap_even)
                         end
 
+                        o_reply_data[23:16] <= i_command_data[23:16];
                         o_reply_data[30:24] <= 7'b0000000;
                     end else begin
                         o_reply_data[30:0] <= {7'b0000010, i_command_data[23:0]};

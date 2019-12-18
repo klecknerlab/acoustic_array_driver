@@ -22,7 +22,7 @@ class Controller(object):
                 time.sleep(0.5)
 
             if reset_some:
-                ports = tinyprog.get_ports(dev_id)
+                ports = get_ports(dev_id)
                 if not ports:
                     raise RuntimeError('No devices found with address %s!' % dev_id)
                 else:

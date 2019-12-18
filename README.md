@@ -42,9 +42,10 @@ Generally speaking, the reply will be a 1 byte error message (should be 0),
 followed by the original command arguments.
 
 Command Byte | Description | Argument 1 | Argument 2 | Argument 3
+--- | --- | --- | --- | ---
 `"w"` or `"W"` | Write one channel | Channel # | Duty (0-255) | Phase (0-255)
 `"b"` or `"B"` | Select read/write bank | (ignored) | Write Bank (0-15)* | Read Bank (0-15)*
-<!-- `"s"` or `"S"` | Swap Output Channels | Physical Channel (0-15) |  Virtual Channel on Odd Pins (0-15)* | Virtual Channel on Even Pins (0-15)* -->
+`"s"` or `"S"` | Swap Output Channels | Physical Channel (0-15) |  Virtual Channel on Odd Pins (0-15)* | Virtual Channel on Even Pins (0-15)*
 
 * If requested channels are >15, no changes are made, but the current channel
 is returned in the reply.

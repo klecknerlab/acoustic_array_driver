@@ -37,15 +37,17 @@ script in any directory.  See the examples directory for... examples.
 ## Low Level Driver Information
 
 All commands are 4 bytes, the first byte is always a command byte, followed by 3 one byte arguments.
+Command bytes can be upper of lower case.
 If capitalized, the device will respond, otherwise nothing is returned.
 Generally speaking, the reply will be a 1 byte error message (should be 0),
 followed by the original command arguments.
 
 Command Byte | Description | Argument 1 | Argument 2 | Argument 3
 --- | --- | --- | --- | ---
-`"w"` or `"W"` | Write one channel | Channel # | Duty (0-255) | Phase (0-255)
-`"b"` or `"B"` | Select read/write bank | (ignored) | Write Bank (0-15)* | Read Bank (0-15)*
-`"s"` or `"S"` | Swap Output Channels | Physical Channel (0-15) |  Virtual Channel on Odd Pins (0-15)* | Virtual Channel on Even Pins (0-15)*
+`"W"` | Write one channel | Channel # | Duty (0-255) | Phase (0-255)
+`"B"` | Select read/write bank | (ignored) | Write Bank (0-15)* | Read Bank (0-15)*
+`"S"` | Swap Output Channels | Physical Channel (0-15) |  Virtual Channel on Odd Pins (0-15)* | Virtual Channel on Even Pins (0-15)*
+`"L"` | Change LED flash parameters | LED Duty (0-255) | LED periods (high byte) | LED periods (low byte)
 
 * If requested channels are >15, no changes are made, but the current channel
 is returned in the reply.

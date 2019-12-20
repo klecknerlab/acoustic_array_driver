@@ -67,6 +67,8 @@ module phase #(parameter PERIOD_CYCLES=600, PHASE_CYCLES=32, INIT_CYCLES=520) (
     output wire o_data_clk,
     output reg o_latch = 0,
     output reg o_sync = 0,
+    output reg o_led_flash = 0,
+    output reg o_camera_sync = 0,
 
     input wire i_command_clk,
     input wire i_command,
@@ -114,6 +116,12 @@ module phase #(parameter PERIOD_CYCLES=600, PHASE_CYCLES=32, INIT_CYCLES=520) (
     reg [7:0] read_addr = 0;
     reg [7:0] write_addr = 0;
 
+    reg [15:0] led_count = 1;
+    reg [15:0] led_periods = 400;
+    reg [7:0] led_duty = 64;
+    reg [7:0] led_phase = 0;
+    reg [7:0] led_cycle = 0;
+
     // This block implements the switching between the physical and virtual
     // channels.
 
@@ -132,87 +140,12 @@ module phase #(parameter PERIOD_CYCLES=600, PHASE_CYCLES=32, INIT_CYCLES=520) (
 
     // reg [3:0] current_read_bank = 0;
 
-    // This doesn't work!   Verilog can not synthesize ):
-    // always @ (current_read_bank, next_physical_channel) begin
-    //     channel_read_odd <= {current_read_bank, channel_swap_odd[(next_physical_channel<<2)+3: next_physical_channel<<2]};
-    //     channel_read_even <= {current_read_bank, channel_swap_even[(next_physical_channel<<2)+3: next_physical_channel<<2]};
-    // end
-
-    // Is there a better way than a long case?  I don't know!
-    // This is a 16-way multiplexer, essentially.
     always @ (next_physical_channel) begin
         // channel_read_odd <= next_physical_channel;
         // channel_read_even <= next_physical_channel;
         `SELECT4x16(next_physical_channel, channel_read_odd, channel_swap_odd)
         `SELECT4x16(next_physical_channel, channel_read_even, channel_swap_even)
     end
-        // case (next_physical_channel)
-        //     0: begin
-        //         channel_read_odd  <= {current_read_bank,  channel_swap_odd[3:0]};
-        //         channel_read_even <= {current_read_bank, channel_swap_even[3:0]};
-        //     end
-        //     1: begin
-        //         channel_read_odd  <= {current_read_bank,  channel_swap_odd[7:4]};
-        //         channel_read_even <= {current_read_bank, channel_swap_even[7:4]};
-        //     end
-        //     2: begin
-        //         channel_read_odd  <= {current_read_bank,  channel_swap_odd[11:8]};
-        //         channel_read_even <= {current_read_bank, channel_swap_even[11:8]};
-        //     end
-        //     3: begin
-        //         channel_read_odd  <= {current_read_bank,  channel_swap_odd[15:12]};
-        //         channel_read_even <= {current_read_bank, channel_swap_even[15:12]};
-        //     end
-        //     4: begin
-        //         channel_read_odd  <= {current_read_bank,  channel_swap_odd[19:16]};
-        //         channel_read_even <= {current_read_bank, channel_swap_even[19:16]};
-        //     end
-        //     5: begin
-        //         channel_read_odd  <= {current_read_bank,  channel_swap_odd[23:20]};
-        //         channel_read_even <= {current_read_bank, channel_swap_even[23:20]};
-        //     end
-        //     6: begin
-        //         channel_read_odd  <= {current_read_bank,  channel_swap_odd[27:24]};
-        //         channel_read_even <= {current_read_bank, channel_swap_even[27:24]};
-        //     end
-        //     7: begin
-        //         channel_read_odd  <= {current_read_bank,  channel_swap_odd[31:28]};
-        //         channel_read_even <= {current_read_bank, channel_swap_even[31:28]};
-        //     end
-        //     8: begin
-        //         channel_read_odd  <= {current_read_bank,  channel_swap_odd[35:32]};
-        //         channel_read_even <= {current_read_bank, channel_swap_even[35:32]};
-        //     end
-        //     9: begin
-        //         channel_read_odd  <= {current_read_bank,  channel_swap_odd[39:36]};
-        //         channel_read_even <= {current_read_bank, channel_swap_even[39:36]};
-        //     end
-        //     10: begin
-        //         channel_read_odd  <= {current_read_bank,  channel_swap_odd[43:40]};
-        //         channel_read_even <= {current_read_bank, channel_swap_even[43:40]};
-        //     end
-        //     11: begin
-        //         channel_read_odd  <= {current_read_bank,  channel_swap_odd[47:44]};
-        //         channel_read_even <= {current_read_bank, channel_swap_even[47:44]};
-        //     end
-        //     12: begin
-        //         channel_read_odd  <= {current_read_bank,  channel_swap_odd[51:48]};
-        //         channel_read_even <= {current_read_bank, channel_swap_even[51:48]};
-        //     end
-        //     13: begin
-        //         channel_read_odd  <= {current_read_bank,  channel_swap_odd[55:52]};
-        //         channel_read_even <= {current_read_bank, channel_swap_even[55:52]};
-        //     end
-        //     14: begin
-        //         channel_read_odd  <= {current_read_bank,  channel_swap_odd[59:56]};
-        //         channel_read_even <= {current_read_bank, channel_swap_even[59:56]};
-        //     end
-        //     15: begin
-        //         channel_read_odd  <= {current_read_bank,  channel_swap_odd[63:60]};
-        //         channel_read_even <= {current_read_bank, channel_swap_even[63:60]};
-        //     end
-        // endcase
-
 
     // Duty cycle, and phase for each output
     wire [7:0] phase_0;
@@ -352,6 +285,23 @@ module phase #(parameter PERIOD_CYCLES=600, PHASE_CYCLES=32, INIT_CYCLES=520) (
                 i_phase <= 0;
                 i_update <= 0;
                 i_shift <= 0;
+
+                if (led_count >= led_periods) begin
+                    led_count <= 1;
+
+                    if (led_cycle == 4) begin
+                        led_cycle <= 0;
+                    end else begin
+                        led_cycle <= led_cycle + 1;
+                        led_phase <= led_cycle << 6;
+                    end
+                    o_camera_sync <= 1;
+                end else begin
+                    led_count <= led_count + 1;
+                    o_camera_sync <= 0;
+                end
+
+
             end
 
             // This code generates the outputs.  At the 18th cycle it latches the data.
@@ -386,6 +336,8 @@ module phase #(parameter PERIOD_CYCLES=600, PHASE_CYCLES=32, INIT_CYCLES=520) (
                 o_channel[13] <= ((i_phase + phase_13) < duty_13) ? 1 : 0;
                 o_channel[14] <= ((i_phase + phase_14) < duty_14) ? 1 : 0;
                 o_channel[15] <= ((i_phase + phase_15) < duty_15) ? 1 : 0;
+                o_led_flash <= (led_cycle == 0) ? 0: (((i_phase + led_phase) < led_duty) ? 1 : 0);
+                // o_led_flash <= (led_cycle == 0) ? 0: 1;
             end
         end
     end
@@ -411,16 +363,6 @@ module phase #(parameter PERIOD_CYCLES=600, PHASE_CYCLES=32, INIT_CYCLES=520) (
 
         if (i_command) begin
             case (i_command_data[31:24])
-                // "a", "A": begin
-                //     if (i_command_data[15:8] < 32) begin
-                //         write_bank <= i_command_data[11:8];
-                //         write_channel <= i_command_data[7:0];
-                //         o_reply_data[22:0] <= {7'b0000000, i_command_data[15:0]};
-                //     end else begin
-                //         o_reply_data[22:0] <= {7'b0000010, 4'b0000, write_bank, write_channel};
-                //     end
-                // end
-
                 "s", "S": begin
                     // Physical address must be valid!
                     if (i_command_data[23:16] < 16) begin
@@ -438,7 +380,7 @@ module phase #(parameter PERIOD_CYCLES=600, PHASE_CYCLES=32, INIT_CYCLES=520) (
                             `SET4x16(i_command_data[19:16], channel_swap_even, i_command_data[3:0])
                             o_reply_data[7:0] <= {4'h0, i_command_data[3:0]};
                         end else begin
-                            o_reply_data[7:0] <= {4'h0, channel_swap_even[(i_command_data[19:16]<<2)+3 : i_command_data[19:16]<<2]};
+                            // o_reply_data[7:0] <= {4'h0, channel_swap_even[(i_command_data[19:16]<<2)+3 : i_command_data[19:16]<<2]};
                             o_reply_data[7:4] <= 4'h0;
                             `SELECT4x16(i_command_data[19:16], o_reply_data[3:0], channel_swap_even)
                         end
@@ -485,6 +427,12 @@ module phase #(parameter PERIOD_CYCLES=600, PHASE_CYCLES=32, INIT_CYCLES=520) (
                     // end else begin
                     //     o_reply_data[30:0] <= {7'b0000010, 12'h000, write_bank, 4'h0, read_bank};
                     // end
+                end
+
+                "l", "L": begin
+                    led_duty <= i_command_data[23:16];
+                    led_periods <= i_command_data[15:0];
+                    o_reply_data[30:0] <= {7'b000000, i_command_data[23:0]};
                 end
 
                 default: begin

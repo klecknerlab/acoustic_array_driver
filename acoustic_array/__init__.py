@@ -16,7 +16,9 @@ class Controller(object):
                 if ports_bl:
                     print("Found a TinyFPGA in bootloader mode at %s... trying to reset." % dev_id)
                     for p in ports_bl:
-                        p.write('\x00')
+                        p.__enter__()
+                        p.write(b'\x00')
+                        p.__exit__(None, None, None)
                         reset_some = True
 
                 time.sleep(0.5)
@@ -31,6 +33,7 @@ class Controller(object):
                 raise RuntimeError('No devices found with address %s, or TinyFPGAs in bootloader mode.' % dev_id)
 
         self.port = ports[0]
+        self.port.__enter__()
 
     def cmd(self, cmd, val1=0, val2=0, val3=0):
         if type(cmd) is str: cmd = bytes(cmd, encoding='utf-8')
@@ -142,6 +145,7 @@ class SerialPort(object):
                 self.port_name, timeout=2.0, writeTimeout=5.0).__enter__()
         except serial.SerialException as e:
             raise PortError("Failed to open serial port:\n%s" % str(e))
+        return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         try:

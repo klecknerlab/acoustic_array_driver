@@ -1,4 +1,5 @@
 `define HALF_OUTPUT_FREQ 1
+// `define QUARTER_OUTPUT_FREQ 1
 
 module top (
         input CLK,
@@ -38,14 +39,31 @@ module top (
     wire CLK_48;
 
     `ifdef HALF_OUTPUT_FREQ
-        reg DATA_CLK = 0;
+        `ifdef QUARTER_OUTPUT_FREQ
+          reg DATA_CLK = 0;
+          reg CLK_24 = 0;
 
-        always @ (posedge CLK_48) begin
-            DATA_CLK <= ~DATA_CLK;
-        end
+          always @ (posedge CLK_48) begin
+              CLK_24 <= ~CLK_24;
+          end
 
-        localparam period_cycles = 600;
-        localparam phase_cycles = 32;
+          always @ (posedge CLK_24) begin
+              DATA_CLK <= ~DATA_CLK;
+          end
+
+          localparam period_cycles = 300;
+          localparam phase_cycles = 16;
+
+        `else
+          reg DATA_CLK = 0;
+
+          always @ (posedge CLK_48) begin
+              DATA_CLK <= ~DATA_CLK;
+          end
+
+          localparam period_cycles = 600;
+          localparam phase_cycles = 32;
+        `endif
     `else
         wire DATA_CLK;
         assign DATA_CLK = CLK_48;
@@ -56,7 +74,8 @@ module top (
 
     phase #(.PERIOD_CYCLES(period_cycles), .PHASE_CYCLES(phase_cycles)) phase_generator (
         .i_data_clk(DATA_CLK),
-        .o_channel({PIN_16, PIN_15, PIN_14, PIN_13, PIN_12, PIN_11, PIN_10, PIN_9, PIN_8, PIN_7, PIN_6, PIN_5, PIN_4, PIN_3, PIN_2, PIN_1}),
+        // .o_channel({PIN_16, PIN_15, PIN_14, PIN_13, PIN_12, PIN_11, PIN_10, PIN_9, PIN_8, PIN_7, PIN_6, PIN_5, PIN_4, PIN_3, PIN_2, PIN_1}),
+        .o_channel({PIN_14, PIN_15, PIN_5, PIN_7, PIN_12, PIN_6, PIN_8, PIN_9, PIN_16, PIN_13, PIN_1, PIN_2, PIN_11, PIN_10, PIN_3, PIN_4}),
         .o_data_clk(PIN_18),
         .o_latch(PIN_17),
         .o_sync(PIN_19),

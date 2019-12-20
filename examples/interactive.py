@@ -3,6 +3,8 @@ import acoustic_array
 
 controller = acoustic_array.Controller()
 
+# controller.port.__enter__()
+
 print('Syntax: [cmd] [val1] [val2] [val3]\n   cmd: single character, val1-3: 0-255')
 
 while True:
@@ -30,3 +32,5 @@ while True:
         break
     except:
         traceback.print_exc()
+
+# controller.port.__exit__()

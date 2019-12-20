@@ -3,6 +3,7 @@ import acoustic_array
 if __name__ == '__main__':
     # Open the phase controller
     pc = acoustic_array.Controller()
+    # pc.port.__enter__()
 
     # The controller has 32 output banks (0-31), and 256 channels (0-255).
     # Each pin on the output of the device controls 16 channels, i.e.
@@ -39,7 +40,7 @@ if __name__ == '__main__':
 
     # Select address to write to = bank, channel
     # In this case we will write all 256 channels, so channel = 0
-    print('Write address:', pc.cmd('A', bank, 0))
+    # print('Write address:', pc.cmd('A', bank, 0))
 
     for n in range(256):
         # Both phase and duty cycle range from 0-255, thus 128 is 50% duty
@@ -52,7 +53,9 @@ if __name__ == '__main__':
 
         # This command writes to the current address, and updates the address by one.
         # The returned data is the bank/channel just written.
-        print('Sucessfully wrote data to:', pc.cmd('W', phase, duty))
+        print('Sucessfully wrote data to:', pc.cmd('W', n, phase, duty))
 
     # Select the output bank
-    print('Selected bank:', pc.cmd('B', 0, bank))
+    print('Selected bank:', pc.cmd('B', 0, bank, bank))
+
+    # pc.port.__exit__()
